@@ -1,0 +1,686 @@
+{% extends "featurama/base.html" %}
+
+{% block title %}Пайплайн №{{ pipeline.id }}{% endblock %}
+
+{% block header %}Пайплайн №{{ pipeline.id }}{% endblock %}
+
+{% block nav_pipelines %}active{% endblock %}
+
+{% block additional_styles %}
+    /* Индикатор шагов */
+    .pipeline-phases {
+        display: flex;
+        align-items: center;
+        margin-bottom: calc(var(--spacing) * 2);
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .phase {
+        flex: 1;
+        min-width: 130px;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        background-color: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-right: 2rem;
+        position: relative;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .phase:last-child {
+        margin-right: 0;
+    }
+    
+    .phase::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -1.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-top: 2px solid var(--border);
+        border-right: 2px solid var(--border);
+        transform: translateY(-50%) rotate(45deg);
+    }
+    
+    .phase:last-child::after {
+        display: none;
+    }
+    
+    .phase.active {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+    
+    .phase.completed {
+        background-color: var(--secondary-light);
+        border-color: var(--secondary);
+        color: var(--secondary-dark);
+    }
+    
+    /* Секция ошибок */
+    .error-section {
+        background-color: #ffebee;
+        border: 1px solid #ffcdd2;
+        border-radius: var(--radius);
+        padding: var(--spacing);
+        margin-bottom: var(--spacing);
+        color: var(--error);
+    }
+    
+    /* Загрузка файла */
+    .file-upload-container {
+        margin: calc(var(--spacing) * 1.5) 0;
+    }
+    
+    .file-upload-label {
+        display: block;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: calc(var(--spacing) * 2);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .file-upload-label:hover {
+        border-color: var(--primary);
+        background-color: var(--primary-light);
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .file-upload-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .file-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--spacing);
+        color: var(--primary);
+    }
+    
+    .upload-text {
+        font-size: 1.1rem;
+        color: var(--text-light);
+    }
+    
+    .file-preview {
+        margin-top: var(--spacing);
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: white;
+        display: none;
+    }
+    
+    .file-preview.active {
+        display: block;
+    }
+    
+    /* Выбор целевой переменной */
+    .binary-option {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .binary-variables-suggestion {
+        margin-top: 1.5rem;
+        padding: var(--spacing);
+        background-color: var(--primary-light);
+        border-radius: var(--radius);
+        border-left: 4px solid var(--primary);
+    }
+    
+    .binary-variables-suggestion h4 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: var(--primary-dark);
+        font-size: 1rem;
+    }
+    
+    .binary-vars-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .binary-var-item {
+        padding: 0.5rem 0.75rem;
+        background-color: white;
+        border: 1px solid var(--primary);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    
+    .binary-var-item:hover, .binary-var-item.selected {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    /* Шаг выбора признаков */
+    .feature-selection-container {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: var(--spacing);
+        margin: var(--spacing) 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--spacing);
+        background-color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .feature-selection-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .feature-list-container {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .feature-list-container h3 {
+        background-color: var(--primary-light);
+        margin: 0;
+        padding: 0.75rem var(--spacing);
+        font-size: 1rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--primary-dark);
+    }
+    
+    .selection-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem var(--spacing);
+        border-bottom: 1px solid var(--border);
+        background-color: #f8f9fa;
+    }
+    
+    .select-all-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+    
+    .feature-checkbox-label {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        cursor: pointer;
+        width: 100%;
+        border-radius: var(--radius);
+        transition: background-color 0.2s;
+        position: relative;
+    }
+                     
+    .feature-checkbox-label:hover {
+        background-color: var(--primary-light);
+    }
+    
+    /* Стилизация чекбоксов */
+    .available-feature-checkbox, 
+    .selected-feature-checkbox,
+    .select-all {
+        opacity: 0; /* Скрыть стандартный чекбокс */
+        position: absolute;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    
+    .checkmark {
+        position: relative;
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        margin-right: 0.75rem;
+        background-color: #fff;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    
+    .available-feature-checkbox:checked ~ .checkmark,
+    .selected-feature-checkbox:checked ~ .checkmark,
+    .select-all:checked ~ .checkmark {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 4px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .available-feature-checkbox:checked ~ .checkmark:after,
+    .selected-feature-checkbox:checked ~ .checkmark:after,
+    .select-all:checked ~ .checkmark:after {
+        display: block;
+    }
+    
+    .feature-item {
+        margin-bottom: 0.25rem;
+        border-radius: var(--radius);
+    }
+                     
+    .feature-label {
+        flex: 1;
+    }
+                     
+    .feature-list {
+        height: 300px;
+        overflow-y: auto;
+        padding: 0.75rem;
+    }
+    
+    .feature-item.filtered {
+        display: none;
+    }
+    
+    .validation-message {
+        color: var(--error);
+        margin-top: var(--spacing);
+        padding: 0.5rem;
+    }
+    
+    .transfer-buttons {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--spacing);
+    }
+    
+    .transfer-button {
+        padding: 0.5rem;
+        background-color: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .transfer-button:hover {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+    }
+    
+    .transfer-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+        .transfer-buttons {
+            flex-direction: row;
+            justify-content: center;
+            margin: var(--spacing) 0;
+        }
+    }
+    
+    /* Общие стили */
+    .description {
+        color: var(--text-light);
+        margin-bottom: var(--spacing);
+        font-size: 0.95rem;
+    }
+    
+    .input-help {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-top: 0.25rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div id="error-section" class="error-section" {% if not error %}style="display:none"{% endif %}>
+        <p id="error-text">{% if error %}{{ error }}{% endif %}</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="dataUploadForm">
+        {% csrf_token %}
+        <div class="section">
+            <h2>Предварительный выбор признаков</h2>
+            <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
+            <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
+            <p class="description">
+                Выберите признаки, которые вы хотите включить в анализ. 
+                Признаки, не выбранные здесь, будут игнорироваться при обработке.
+            </p>
+            
+            <div class="search-container">
+                <input type="text" id="feature-search" placeholder="Поиск признаков..." class="search-input">
+            </div>
+            
+            <div class="feature-selection-container">
+                <div class="feature-list-container">
+                    <h3>Доступные признаки</h3>
+                    <div class="selection-header">
+                        <label class="select-all-container feature-checkbox-label">
+                            <input type="checkbox" id="select-all-available" class="select-all">
+                            <span class="checkmark"></span>
+                            <span>Выбрать все</span>
+                        </label>
+                        <span class="feature-count" id="available-count">0 признаков</span>
+                    </div>
+                    <div class="feature-list" id="available-features-list">
+                        {% for choice in feature_form.selected_features.field.choices %}
+                        <div class="feature-item" data-feature-name="{{ choice.1 }}">
+                            <label class="feature-checkbox-label">
+                                <input type="checkbox" 
+                                    name="available_feature" 
+                                    value="{{ choice.0 }}" 
+                                    class="available-feature-checkbox">
+                                <span class="checkmark"></span>
+                                <span class="feature-label">{{ choice.1 }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="transfer-buttons">
+                    <button type="button" id="move-to-selected" class="transfer-button" title="Добавить выбранные признаки">→</button>
+                    <button type="button" id="move-all-to-selected" class="transfer-button" title="Добавить все признаки">»</button>
+                    <button type="button" id="move-all-to-available" class="transfer-button" title="Удалить все признаки">«</button>
+                    <button type="button" id="move-to-available" class="transfer-button" title="Удалить выбранные признаки">←</button>
+                </div>
+                
+                <div class="feature-list-container">
+                    <h3>Выбранные признаки</h3>
+                    <div class="selection-header">
+                        <label class="select-all-container feature-checkbox-label">
+                            <input type="checkbox" id="select-all-selected" class="select-all">
+                            <span class="checkmark"></span>
+                            <span>Выбрать все</span>
+                        </label>
+                        <span class="feature-count" id="selected-count">0 признаков</span>
+                    </div>
+                    <div class="feature-list" id="selected-features-list">
+                        <!-- Выбранные признаки будут отображаться здесь -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Скрытое поле для хранения выбранных признаков -->
+            <div id="selected-features-container"></div>
+            
+            <div id="validation-message" class="validation-message"></div>
+            
+            <div class="button-group">
+                <button type="submit" class="button button-primary" id="complete-button">Завершить загрузку</button>
+                <a href="{% url 'featurama:select_target_variable' pipeline_id=pipeline.id %}" class="button button-outline">
+                    Назад
+                </a>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Элементы выбора признаков
+            const availableList = document.getElementById('available-features-list');
+            const selectedList = document.getElementById('selected-features-list');
+            const searchInput = document.getElementById('feature-search');
+            const validationMessage = document.getElementById('validation-message');
+            const completeButton = document.getElementById('complete-button');
+            const availableCountEl = document.getElementById('available-count');
+            const selectedCountEl = document.getElementById('selected-count');
+            
+            // Данные признаков с сервера
+            let featureData = [];
+            {% for choice in feature_form.selected_features.field.choices %}
+            featureData.push({
+                value: "{{ choice.0 }}",
+                label: "{{ choice.1 }}"
+            });
+            {% endfor %}
+            
+            // Вспомогательная функция для создания элемента чекбокса признака
+            function createFeatureItem(value, label) {
+                const div = document.createElement('div');
+                div.className = 'feature-item';
+                div.dataset.featureName = label;
+                
+                const labelEl = document.createElement('label');
+                labelEl.className = 'feature-checkbox-label';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'selected-feature-checkbox';
+                checkbox.value = value;
+                
+                const checkmark = document.createElement('span');
+                checkmark.className = 'checkmark';
+                
+                const span = document.createElement('span');
+                span.className = 'feature-label';
+                span.textContent = label;
+                
+                labelEl.appendChild(checkbox);
+                labelEl.appendChild(checkmark);
+                labelEl.appendChild(span);
+                
+                div.appendChild(labelEl);
+                return div;
+            }
+            
+            // Обновление скрытых полей для выбранных признаков
+            function updateSelectedFeatures() {
+                const container = document.getElementById('selected-features-container');
+                container.innerHTML = ''; // Очистить существующие
+                
+                // Получить все выбранные признаки
+                const items = selectedList.querySelectorAll('.feature-item');
+                
+                items.forEach(function(item) {
+                    const value = item.querySelector('input').value;
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'selected_features';
+                    input.value = value;
+                    container.appendChild(input);
+                });
+                
+                // Правильное обновление счетчиков
+                const availableItems = availableList.querySelectorAll('.feature-item');
+                let visibleAvailableCount = 0;
+                
+                availableItems.forEach(function(item) {
+                    if (item.style.display !== 'none' && !item.classList.contains('filtered')) {
+                        visibleAvailableCount++;
+                    }
+                });
+                
+                const selectedCount = selectedList.querySelectorAll('.feature-item').length;
+                availableCountEl.textContent = `${visibleAvailableCount} признак${visibleAvailableCount !== 1 ? 'ов' : ''}`;
+                selectedCountEl.textContent = `${selectedCount} признак${selectedCount !== 1 ? 'ов' : ''}`;
+                
+                // Валидация выбора
+                validateSelection();
+            }
+            
+            // Проверка, что выбрано хотя бы несколько признаков
+            function validateSelection() {
+                const items = selectedList.querySelectorAll('.feature-item');
+                
+                if (items.length === 0) {
+                    validationMessage.textContent = 'Пожалуйста, выберите хотя бы один признак';
+                    completeButton.disabled = true;
+                } else {
+                    validationMessage.textContent = '';
+                    completeButton.disabled = false;
+                }
+            }
+            
+            // Фильтрация доступных признаков по поиску
+            function filterFeatures() {
+                const query = searchInput.value.toLowerCase();
+                const items = availableList.querySelectorAll('.feature-item');
+                
+                items.forEach(function(item) {
+                    const name = item.dataset.featureName.toLowerCase();
+                    if (name.includes(query)) {
+                        item.classList.remove('filtered');
+                    } else {
+                        item.classList.add('filtered');
+                    }
+                });
+                
+                updateSelectedFeatures();
+            }
+            
+            // Функциональность поиска
+            searchInput.addEventListener('input', filterFeatures);
+            
+            // Перемещение признаков между списками
+            document.getElementById('move-to-selected').addEventListener('click', function() {
+                const availableCheckboxes = document.querySelectorAll('.available-feature-checkbox:checked');
+                
+                if (availableCheckboxes.length === 0) {
+                    alert('Пожалуйста, выберите хотя бы один признак для перемещения');
+                    return;
+                }
+                
+                availableCheckboxes.forEach(function(checkbox) {
+                    const item = checkbox.closest('.feature-item');
+                    const value = checkbox.value;
+                    const label = item.dataset.featureName;
+                    
+                    // Создать новый элемент в списке выбранных
+                    selectedList.appendChild(createFeatureItem(value, label));
+                    
+                    // Скрыть элемент в списке доступных
+                    item.style.display = 'none';
+                    checkbox.checked = false;
+                });
+                
+                updateSelectedFeatures();
+            });
+            
+            document.getElementById('move-to-available').addEventListener('click', function() {
+                const selectedCheckboxes = document.querySelectorAll('.selected-feature-checkbox:checked');
+                
+                if (selectedCheckboxes.length === 0) {
+                    alert('Пожалуйста, выберите хотя бы один признак для удаления');
+                    return;
+                }
+                
+                selectedCheckboxes.forEach(function(checkbox) {
+                    const item = checkbox.closest('.feature-item');
+                    const value = checkbox.value;
+                    const label = item.dataset.featureName;
+                    
+                    // Показать элемент в списке доступных
+                    const availableItem = availableList.querySelector(`.feature-item[data-feature-name="${label}"]`);
+                    if (availableItem) {
+                        availableItem.style.display = '';
+                    }
+                    
+                    // Удалить из списка выбранных
+                    item.remove();
+                });
+                
+                updateSelectedFeatures();
+            });
+            
+            // Перемещение всех признаков
+            document.getElementById('move-all-to-selected').addEventListener('click', function() {
+                const availableItems = availableList.querySelectorAll('.feature-item:not(.filtered)');
+                
+                availableItems.forEach(function(item) {
+                    const checkbox = item.querySelector('input');
+                    const value = checkbox.value;
+                    const label = item.dataset.featureName;
+                    
+                    // Создать новый элемент в списке выбранных
+                    selectedList.appendChild(createFeatureItem(value, label));
+                    
+                    // Скрыть элемент в списке доступных
+                    item.style.display = 'none';
+                });
+                
+                updateSelectedFeatures();
+            });
+            
+            document.getElementById('move-all-to-available').addEventListener('click', function() {
+                const selectedItems = selectedList.querySelectorAll('.feature-item');
+                
+                selectedItems.forEach(function(item) {
+                    const checkbox = item.querySelector('input');
+                    const value = checkbox.value;
+                    const label = item.dataset.featureName;
+                    
+                    // Показать элемент в списке доступных
+                    const availableItem = availableList.querySelector(`.feature-item[data-feature-name="${label}"]`);
+                    if (availableItem) {
+                        availableItem.style.display = '';
+                    }
+                    
+                    // Удалить из списка выбранных
+                    item.remove();
+                });
+                
+                updateSelectedFeatures();
+            });
+            
+            // Выбор всех чекбоксов
+            document.getElementById('select-all-available').addEventListener('change', function() {
+                const checkboxes = availableList.querySelectorAll('.feature-item:not(.filtered) input[type="checkbox"]');
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = this.checked;
+                }, this);
+            });
+            
+            document.getElementById('select-all-selected').addEventListener('change', function() {
+                const checkboxes = selectedList.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = this.checked;
+                }, this);
+            });
+            
+            // Инициализация счетчиков признаков
+            updateSelectedFeatures();
+            
+            // Автоматически выбрать все доступные признаки изначально
+            document.getElementById('move-all-to-selected').click();
+        });
+    </script>
+{% endblock %} 

@@ -1,0 +1,194 @@
+{% extends "featurama/base.html" %}
+
+{% block title %}Главное меню{% endblock %}
+
+{% block header %}Главное меню{% endblock %}
+
+{% block nav_pipelines %}active{% endblock %}
+
+{% block additional_styles %}
+    .pipelines-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: calc(var(--spacing) * 2);
+        margin-top: calc(var(--spacing) * 2);
+    }
+    
+    .pipeline-card {
+        background: white;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .pipeline-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pipeline-header {
+        padding: var(--spacing);
+        background-color: var(--primary-light);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .pipeline-header h3 {
+        margin: 0;
+        color: var(--primary-dark);
+        font-weight: 500;
+    }
+    
+    .pipeline-body {
+        padding: var(--spacing);
+        flex-grow: 1;
+    }
+    
+    .pipeline-info {
+        margin-bottom: var(--spacing);
+    }
+    
+    .pipeline-info p {
+        margin: 0.5rem 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .pipeline-info strong {
+        min-width: 110px;
+        display: inline-block;
+    }
+    
+    .pipeline-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: auto;
+        padding: var(--spacing);
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: calc(var(--spacing) * 3);
+        background-color: white;
+        border-radius: var(--radius);
+        border: 1px dashed var(--border);
+        color: var(--text-light);
+    }
+    
+    .empty-state p {
+        margin-bottom: var(--spacing);
+    }
+    
+    .empty-state .button {
+        margin-top: var(--spacing);
+    }
+    
+    .create-pipeline {
+        margin-bottom: calc(var(--spacing) * 2);
+    }
+    
+    .pipeline-status {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-complete {
+        background-color: var(--secondary-light);
+        color: var(--secondary-dark);
+    }
+    
+    .status-config {
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+    }
+    
+    .status-new {
+        background-color: var(--warning);
+        color: white;
+    }
+    
+    @media (max-width: 600px) {
+        .pipeline-actions {
+            flex-direction: column;
+        }
+        
+        .pipeline-actions .button {
+            width: 100%;
+        }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="create-pipeline">
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="button button-primary">
+                <span>Создать новый пайплайн</span>
+            </button>
+        </form>
+    </div>
+
+    {% if pipelines %}
+        <div class="pipelines-container">
+            {% for pipeline in pipelines %}
+                <div class="pipeline-card">
+                    <div class="pipeline-header">
+                        <h3>Пайплайн №{{ pipeline.id }}</h3>
+                    </div>
+                    <div class="pipeline-body">
+                        <div class="pipeline-info">
+                            <p>Набор данных: {{ pipeline.filename|default:"Не задан" }}</p>
+                            <p>Целевая переменная: {{ pipeline.target_variable|default:"Не задан" }}</p>
+                            <p>Исходной набор признаков: {{ pipeline.preliminarily_selected_features|default:"Не задан" }}</p>
+                            <p>Фильтрующий метод: {{ pipeline.fs_filter.name|default:"Не задан" }}</p>
+                            <p>Метод-обертка: {{ pipeline.fs_wrapper.name|default:"Не задан" }}</p>
+                            <p>Окончательный набор признаков: {{ pipeline.final_selected_features|default:"Не задан" }}</p>
+                            <p>Модель: {{ pipeline.ml_model.name|default:"Не задан" }}</p>
+                        </div>
+                    </div>
+                    <div class="pipeline-actions">
+                        {% if pipeline.dataset %}
+                            {% if pipeline.filter_method %}
+                                <a href="{% url 'featurama:results_summary' pipeline.id %}" class="button button-primary">
+                                    Просмотреть отчет
+                                </a>
+                            {% else %}
+                                <a href="{% url 'featurama:configure_pipeline' pipeline.id %}" class="button button-primary">
+                                    Настроить
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'featurama:upload_file' pipeline.id %}" class="button button-primary">
+                                Загрузить данные
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'featurama:delete_pipeline' pipeline.id %}" class="button button-outline" 
+                           onclick="return confirm('Вы уверены, что хотите удалить этот пайплайн?')">
+                            Удалить
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            У вас пока нет пайплайнов. Создайте один, чтобы начать!
+        </div>
+    {% endif %}
+    
+{% endblock %}
+
+{% block footer %}
+    <!-- Override default footer as it's not needed here -->
+{% endblock %}

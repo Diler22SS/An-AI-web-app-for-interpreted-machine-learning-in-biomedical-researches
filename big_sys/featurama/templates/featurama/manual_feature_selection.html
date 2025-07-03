@@ -1,0 +1,490 @@
+{% extends "featurama/base.html" %}
+
+{% block title %}Пайплайн №{{ pipeline.id }}{% endblock %}
+
+{% block header %}Пайплайн №{{ pipeline.id }}{% endblock %}
+
+{% block nav_pipelines %}active{% endblock %}
+
+{% block additional_styles %}
+    .method-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+    .description {
+        color: #666;
+        margin-bottom: 10px;
+    }
+    .method-description {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        margin-top: 0.5rem;
+    }
+    .feature-selection-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: calc(var(--spacing) * 2);
+        margin-top: calc(var(--spacing) * 2);
+    }
+    
+    .features-section {
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: white;
+        box-shadow: var(--shadow);
+    }
+    
+    .features-section h3 {
+        margin-top: 0;
+        color: var(--primary-dark);
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .feature-list {
+        list-style-type: none;
+        padding: 0.75rem;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-top: var(--spacing);
+    }
+    
+    .feature-item {
+        margin-bottom: 0.5rem;
+        border-radius: var(--radius);
+    }
+    
+    .feature-checkbox-label {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        cursor: pointer;
+        width: 100%;
+        border-radius: var(--radius);
+        transition: background-color 0.2s;
+        position: relative;
+    }
+    
+    .feature-checkbox-label:hover {
+        background-color: var(--primary-light);
+    }
+    
+    /* Custom checkbox styling */
+    .feature-checkbox {
+        opacity: 0; /* Hide the default checkbox */
+        position: absolute;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    
+    .checkmark {
+        position: relative;
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        margin-right: 0.75rem;
+        background-color: #fff;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    
+    .feature-checkbox:checked ~ .checkmark {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 4px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .feature-checkbox:checked ~ .checkmark:after {
+        display: block;
+    }
+    
+    .feature-label {
+        flex: 1;
+        margin-right: 0.5rem;
+    }
+    
+    .feature-count {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-top: 0.5rem;
+        display: block;
+    }
+    
+    .search-container {
+        margin-bottom: var(--spacing);
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-light);
+    }
+    
+    .highlighted {
+        background-color: #fff3cd;
+    }
+    
+    .validation-message {
+        color: var(--error);
+        padding: 0.5rem;
+        margin-top: var(--spacing);
+    }
+    
+    .pipeline-phases {
+        display: flex;
+        align-items: center;
+        margin-bottom: calc(var(--spacing) * 2);
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .phase {
+        flex: 1;
+        min-width: 130px;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        background-color: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-right: 2rem;
+        position: relative;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .phase:last-child {
+        margin-right: 0;
+    }
+    
+    .phase::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -1.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-top: 2px solid var(--border);
+        border-right: 2px solid var(--border);
+        transform: translateY(-50%) rotate(45deg);
+    }
+    
+    .phase:last-child::after {
+        display: none;
+    }
+    
+    .phase.completed {
+        background-color: var(--secondary-light);
+        border-color: var(--secondary);
+        color: var(--secondary-dark);
+    }
+    
+    .phase.active {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+    
+    .badge-success {
+        background-color: var(--secondary-light);
+        color: var(--secondary-dark);
+    }
+    
+    .badge-info {
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+    }
+    
+    .badge-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    @media (max-width: 768px) {
+        .feature-selection-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .select-all-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem; 
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+    .method-section h2 {
+        margin-top: 0;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--primary-dark);
+    }
+    .method-section {
+        margin-bottom: calc(var(--spacing) * 2);
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: white;
+        box-shadow: var(--shadow);
+    }
+    #model-params-container {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+    .param-group {
+        margin-bottom: 15px;
+    }
+    
+    .param-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .param-group input,
+    .param-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+    }
+{% endblock %}
+
+{% block content %}
+    <div id="error-section" class="error-section" {% if not error %}style="display:none"{% endif %}>
+        <p id="error-text">{% if error %}{{ error }}{% endif %}</p>
+    </div>
+    <h2>Обучение модели</h2>
+    <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
+    <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
+    <p><strong>Количество анализируемых признаков:</strong> {{ preliminarily_selected_features|length }}</p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <!-- Модель машинного обучения -->
+            <div class="method-section">
+                <h3>Выбор модели машинного обучения</h3>
+                <p class="description">Модель машинного обучения</p>
+                <select name="model_method" id="model-method-select" required onchange="updateParameters(this, 'model')">
+                    {% for model in models %}
+                        <option value="{{ model.function_name }}"
+                            {% if pipeline.ml_model.function_name == model.function_name %}selected{% endif %}
+                            data-params='{{ model.adjustable_parameters }}'>
+                            {{ model.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div id="model-params-container"></div>
+            </div>
+            <div class="section">
+                <h3>Выбор признаков</h3>
+                <p class="text-muted">
+                    Просмотрите и скорректируйте признаки, выбранные фильтрующим методом и методом-обертки.
+                    Выберите, какие признаки вы хотите включить в обучение модели.
+                </p>
+                <div class="feature-selection-container">
+                    <div class="features-section">
+                        <h4>Отобранные признаки</h4>
+                        <p>Количество признаков на каждом этапе:</p>
+                        <p><strong>Исходный набор признаков:</strong> {{ user_features|length }}</p>
+                        <p><strong>Фильтрующий метод ({{ pipeline.filter_method }}):</strong> {{ filtered_features|length }}</p>
+                        <p><strong>Метод-обертка ({{ pipeline.wrapper_method }}):</strong> {{ wrapped_features|length }}</p>
+                        
+                        <div class="search-container">
+                            <input type="text" id="feature-search" placeholder="Поиск признаков..." class="search-input">
+                        </div>
+                    </div>
+                    
+                    <div class="features-section">
+                        <h3>Признаки для обучения модели</h3>
+                        <span class="feature-count"><span id="selected-count">{{ selected_features|length }}</span> признаков выбрано</span>
+                        
+                        <ul class="feature-list" id="feature-list">
+                            {% for feature in user_features %}
+                                <li class="feature-item">
+                                    <label class="feature-checkbox-label">
+                                        <input type="checkbox" 
+                                            name="selected_features" 
+                                            value="{{ feature }}" 
+                                            {% if feature in selected_features %}checked{% endif %}
+                                            class="feature-checkbox">
+                                        <span class="checkmark"></span>
+                                        <span class="feature-label">{{ feature }}</span>
+                                        
+                                        {% if feature in filtered_features and feature in wrapped_features %}
+                                            <span class="badge badge-success">Оба метода</span>
+                                        {% elif feature in filtered_features %}
+                                            <span class="badge badge-info">Только фильтр</span>
+                                        {% elif feature in wrapped_features %}
+                                            <span class="badge badge-warning">Только обертка</span>
+                                        {% endif %}
+                                    </label>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="button button-primary">Обучить модель</button>
+                <a href="{% url 'featurama:configure_pipeline' pipeline.id %}" class="button button-outline">
+                    Назад
+                </a>
+            </div>
+        </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Единая функция обновления параметров
+    function updateParameters(selectElement, type) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const container = document.getElementById(type + '-params-container');
+        const paramsData = selectedOption.getAttribute('data-params').replace(/'/g, '"');
+
+        try {
+            const params = JSON.parse(paramsData);
+            renderParameters(params, container, type); // передаем type
+        } catch (error) {
+            container.innerHTML = '<p>Ошибка загрузки параметров</p>';
+            console.error('Error parsing parameters:', error);
+        }
+    }
+
+    // Рендеринг параметров
+    function renderParameters(params, container, type) {
+        container.innerHTML = '';
+        for (const [paramName, config] of Object.entries(params)) {
+            const paramGroup = document.createElement('div');
+            paramGroup.className = 'param-group';
+
+            const label = document.createElement('label');
+            label.textContent = config.description || paramName;
+            label.setAttribute('for', `${type}_${paramName}`);
+            paramGroup.appendChild(label);
+
+            let input;
+            if (config.type === 'category') {
+                input = document.createElement('select');
+                input.name = `${type}_${paramName}`;
+                input.id = `${type}_${paramName}`;
+                input.required = true;
+
+                for (const category of config.categories) {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    if (category === config.default) option.selected = true;
+                    input.appendChild(option);
+                }
+            } else {
+                input = document.createElement('input');
+                input.type = 'number';
+                input.name = `${type}_${paramName}`;
+                input.id = `${type}_${paramName}`;
+                input.required = true;
+                if (config.min !== undefined) input.min = config.min;
+                if (config.max !== undefined) input.max = config.max;
+                if (config.step !== undefined) input.step = config.step;
+                if (config.default !== undefined) input.value = config.default;
+            }
+
+            paramGroup.appendChild(input);
+            container.appendChild(paramGroup);
+        }
+    }
+
+    // Инициализация всех параметров при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        ['model'].forEach(type => {
+            const select = document.getElementById(type + '-method-select');
+            if (select && select.selectedIndex >= 0) {
+                updateParameters(select, type);
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const featureSearch = document.getElementById('feature-search');
+        const featureItems = document.querySelectorAll('.feature-item');
+        const featureCheckboxes = document.querySelectorAll('.feature-checkbox');
+        const selectedCount = document.getElementById('selected-count');
+        
+        // Update the selected count
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.feature-checkbox:checked');
+            selectedCount.textContent = checked.length;
+        }
+        
+        // Initialize
+        updateSelectedCount();
+        
+        // Search functionality
+        featureSearch.addEventListener('input', function() {
+            const searchText = this.value.toLowerCase();
+            
+            featureItems.forEach(item => {
+                const label = item.querySelector('.feature-label').textContent.toLowerCase();
+                
+                if (searchText === '') {
+                    item.style.display = '';
+                    item.classList.remove('highlighted');
+                } else if (label.includes(searchText)) {
+                    item.style.display = '';
+                    item.classList.add('highlighted');
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Update count when checkboxes change
+        featureCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+    });
+</script>
+{% endblock %} 

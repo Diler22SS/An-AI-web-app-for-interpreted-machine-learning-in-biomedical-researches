@@ -1,0 +1,521 @@
+{% extends "featurama/base.html" %}
+
+{% block title %}Пайплайн №{{ pipeline.id }}{% endblock %}
+
+{% block header %}Пайплайн №{{ pipeline.id }}{% endblock %}
+
+{% block nav_pipelines %}active{% endblock %}
+
+{% block additional_styles %}
+    /* Индикатор шагов */
+    .pipeline-phases {
+        display: flex;
+        align-items: center;
+        margin-bottom: calc(var(--spacing) * 2);
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .phase {
+        flex: 1;
+        min-width: 130px;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        background-color: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-right: 2rem;
+        position: relative;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .phase:last-child {
+        margin-right: 0;
+    }
+    
+    .phase::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -1.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-top: 2px solid var(--border);
+        border-right: 2px solid var(--border);
+        transform: translateY(-50%) rotate(45deg);
+    }
+    
+    .phase:last-child::after {
+        display: none;
+    }
+    
+    .phase.active {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+    
+    .phase.completed {
+        background-color: var(--secondary-light);
+        border-color: var(--secondary);
+        color: var(--secondary-dark);
+    }
+    
+    /* Секция ошибок */
+    .error-section {
+        background-color: #ffebee;
+        border: 1px solid #ffcdd2;
+        border-radius: var(--radius);
+        padding: var(--spacing);
+        margin-bottom: var(--spacing);
+        color: var(--error);
+    }
+    
+    /* Загрузка файла */
+    .file-upload-container {
+        margin: calc(var(--spacing) * 1.5) 0;
+    }
+    
+    .file-upload-label {
+        display: block;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: calc(var(--spacing) * 2);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .file-upload-label:hover {
+        border-color: var(--primary);
+        background-color: var(--primary-light);
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .file-upload-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .file-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--spacing);
+        color: var(--primary);
+    }
+    
+    .upload-text {
+        font-size: 1.1rem;
+        color: var(--text-light);
+    }
+    
+    .file-preview {
+        margin-top: var(--spacing);
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: white;
+        display: none;
+    }
+    
+    .file-preview.active {
+        display: block;
+    }
+    
+    /* Выбор целевой переменной */
+    .binary-option {
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .binary-variables-suggestion {
+        margin-top: 1.5rem;
+        padding: var(--spacing);
+        background-color: var(--primary-light);
+        border-radius: var(--radius);
+        border-left: 4px solid var(--primary);
+    }
+    
+    .binary-variables-suggestion h4 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: var(--primary-dark);
+        font-size: 1rem;
+    }
+    
+    .binary-vars-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .binary-var-item {
+        padding: 0.5rem 0.75rem;
+        background-color: white;
+        border: 1px solid var(--primary);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    
+    .binary-var-item:hover, .binary-var-item.selected {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    /* Шаг выбора признаков */
+    .feature-selection-container {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: var(--spacing);
+        margin: var(--spacing) 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--spacing);
+        background-color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .feature-selection-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .feature-list-container {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .feature-list-container h3 {
+        background-color: var(--primary-light);
+        margin: 0;
+        padding: 0.75rem var(--spacing);
+        font-size: 1rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--primary-dark);
+    }
+    
+    .selection-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem var(--spacing);
+        border-bottom: 1px solid var(--border);
+        background-color: #f8f9fa;
+    }
+    
+    .select-all-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+    
+    .feature-checkbox-label {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        cursor: pointer;
+        width: 100%;
+        border-radius: var(--radius);
+        transition: background-color 0.2s;
+        position: relative;
+    }
+                     
+    .feature-checkbox-label:hover {
+        background-color: var(--primary-light);
+    }
+    
+    /* Стилизация чекбоксов */
+    .available-feature-checkbox, 
+    .selected-feature-checkbox,
+    .select-all {
+        opacity: 0; /* Скрыть стандартный чекбокс */
+        position: absolute;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    
+    .checkmark {
+        position: relative;
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        margin-right: 0.75rem;
+        background-color: #fff;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    
+    .available-feature-checkbox:checked ~ .checkmark,
+    .selected-feature-checkbox:checked ~ .checkmark,
+    .select-all:checked ~ .checkmark {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 4px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .available-feature-checkbox:checked ~ .checkmark:after,
+    .selected-feature-checkbox:checked ~ .checkmark:after,
+    .select-all:checked ~ .checkmark:after {
+        display: block;
+    }
+    
+    .feature-item {
+        margin-bottom: 0.25rem;
+        border-radius: var(--radius);
+    }
+                     
+    .feature-label {
+        flex: 1;
+    }
+                     
+    .feature-list {
+        height: 300px;
+        overflow-y: auto;
+        padding: 0.75rem;
+    }
+    
+    .feature-item.filtered {
+        display: none;
+    }
+    
+    .validation-message {
+        color: var(--error);
+        margin-top: var(--spacing);
+        padding: 0.5rem;
+    }
+    
+    .transfer-buttons {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--spacing);
+    }
+    
+    .transfer-button {
+        padding: 0.5rem;
+        background-color: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .transfer-button:hover {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+    }
+    
+    .transfer-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+        .transfer-buttons {
+            flex-direction: row;
+            justify-content: center;
+            margin: var(--spacing) 0;
+        }
+    }
+    
+    /* Общие стили */
+    .description {
+        color: var(--text-light);
+        margin-bottom: var(--spacing);
+        font-size: 0.95rem;
+    }
+    
+    .input-help {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        margin-top: 0.25rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div id="error-section" class="error-section" {% if not error %}style="display:none"{% endif %}>
+        <p id="error-text">{% if error %}{{ error }}{% endif %}</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="dataUploadForm">
+        {% csrf_token %}
+        <div class="section">
+            <h2>Загрузка файла</h2>
+            
+
+            <p class="description">
+                Загрузите CSV или Excel файл (макс. 10MB). Данные должны содержать заголовки столбцов.
+            </p>
+            
+            <div class="file-upload-container">
+                <label for="dataset_file" class="file-upload-label">
+                    <div class="file-upload-icon">
+                        <span class="file-icon">📁</span>
+                        <span class="upload-text">Выберите файл или перетащите его сюда</span>
+                    </div>
+                    <input type="file" id="dataset_file" name="dataset_file" accept=".csv,.xlsx,.xls" required class="file-input">
+                </label>
+                <div id="file-preview" class="file-preview"></div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="button button-primary" id="uploadButton" disabled>Загрузить файл</button>
+                <a href="{% url 'featurama:pipelines' %}" class="button button-outline">Отмена</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('dataset_file');
+        const filePreview = document.getElementById('file-preview');
+        const uploadButton = document.getElementById('uploadButton');
+        const errorSection = document.getElementById('error-section');
+        const errorText = document.getElementById('error-text');
+        const maxFileSize = 10 * 1024 * 1024;
+        const allowedExtensions = ['csv', 'xlsx', 'xls'];
+
+        // Сброс ошибок при новом выборе файла
+        fileInput.addEventListener('click', () => {
+            errorSection.style.display = 'none';
+        });
+
+        fileInput.addEventListener('change', function() {
+            errorSection.style.display = 'none';
+            
+            if (this.files.length === 0) {
+                resetFilePreview();
+                return;
+            }
+
+            const file = this.files[0];
+            const extension = getFileExtension(file.name);
+
+            // Валидация расширения
+            if (!allowedExtensions.includes(extension)) {
+                showError(`Неподдерживаемый формат. Разрешены: ${allowedExtensions.join(', ')}`);
+                resetFilePreview();
+                return;
+            }
+
+            // Валидация размера
+            if (file.size > maxFileSize) {
+                showError("Файл слишком большой. Макс. размер 10MB");
+                resetFilePreview();
+                return;
+            }
+
+            // Отображение информации о файле
+            const fileSize = formatFileSize(file.size);
+            filePreview.innerHTML = `
+                <div>
+                    <strong>Файл:</strong> ${file.name}<br>
+                    <strong>Тип:</strong> ${extension.toUpperCase()}<br>
+                    <strong>Размер:</strong> ${fileSize}
+                </div>
+            `;
+            filePreview.classList.add('active');
+            uploadButton.disabled = false;
+        });
+
+        // Drag and drop обработчики
+        const dropArea = document.querySelector('.file-upload-label');
+        const events = ['dragenter', 'dragover', 'dragleave', 'drop'];
+        
+        events.forEach(event => {
+            dropArea.addEventListener(event, preventDefaults);
+        });
+
+        ['dragenter', 'dragover'].forEach(event => {
+            dropArea.addEventListener(event, highlight);
+        });
+
+        ['dragleave', 'drop'].forEach(event => {
+            dropArea.addEventListener(event, unhighlight);
+        });
+
+        dropArea.addEventListener('drop', handleDrop);
+
+        // Вспомогательные функции
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight() {
+            dropArea.style.borderColor = 'var(--primary)';
+            dropArea.style.backgroundColor = 'var(--primary-light)';
+        }
+
+        function unhighlight() {
+            dropArea.style.borderColor = 'var(--border)';
+            dropArea.style.backgroundColor = '';
+        }
+
+        function handleDrop(e) {
+            const files = e.dataTransfer.files;
+            if (files.length) fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+
+        function getFileExtension(filename) {
+            return filename.split('.').pop().toLowerCase();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorSection.style.display = 'block';
+            uploadButton.disabled = true;
+        }
+
+        function resetFilePreview() {
+            filePreview.innerHTML = '';
+            filePreview.classList.remove('active');
+            uploadButton.disabled = true;
+        }
+    });
+</script>
+{% endblock %}

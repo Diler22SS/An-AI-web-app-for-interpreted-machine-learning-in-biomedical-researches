@@ -1,0 +1,366 @@
+{% extends "featurama/base.html" %}
+
+{% block title %}Отчет с результатами анализа - Пайплайн {{ pipeline.id }}{% endblock %}
+
+{% block header %}Отчет с результатами анализа - Пайплайн #{{ pipeline.id }}{% endblock %}
+
+{% block nav_pipelines %}active{% endblock %}
+
+{% block additional_styles %}
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing);
+        margin-top: var(--spacing);
+    }
+    
+    .metric-card {
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        text-align: center;
+        background-color: white;
+        box-shadow: var(--shadow);
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin: 0.5rem 0;
+    }
+    
+    .plot-container {
+        margin: var(--spacing) 0;
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        min-height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+        box-shadow: var(--shadow);
+    }
+    
+    .plot-container img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .plot-placeholder {
+        color: var(--text-light);
+        font-style: italic;
+    }
+    
+    .features-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: calc(var(--spacing) * 2);
+    }
+    
+    .features-section {
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: white;
+        box-shadow: var(--shadow);
+    }
+    
+    .features-list {
+        list-style-type: none;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .feature-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .pipeline-phases {
+        display: flex;
+        align-items: center;
+        margin-bottom: calc(var(--spacing) * 2);
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+    
+    .phase {
+        flex: 1;
+        min-width: 130px;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        background-color: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-right: 2rem;
+        position: relative;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .phase:last-child {
+        margin-right: 0;
+    }
+    
+    .phase::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -1.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-top: 2px solid var(--border);
+        border-right: 2px solid var(--border);
+        transform: translateY(-50%) rotate(45deg);
+    }
+    
+    .phase:last-child::after {
+        display: none;
+    }
+    
+    .phase.completed {
+        background-color: var(--secondary-light);
+        border-color: var(--secondary);
+        color: var(--secondary-dark);
+    }
+    
+    .phase.active {
+        background-color: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+    
+    .params-section {
+        margin-top: var(--spacing);
+        padding: var(--spacing);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background-color: white;
+        box-shadow: var(--shadow);
+    }
+    
+    .params-title {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .params-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: var(--spacing);
+    }
+    
+    .params-table th, .params-table td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .params-table th {
+        font-weight: 500;
+        color: var(--text-light);
+    }
+    
+    @media (max-width: 768px) {
+        .features-list {
+            grid-template-columns: 1fr;
+        }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="section">
+        <h2>Информация о пайплайне</h2>
+        <div class="pipeline-info">
+            <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
+            <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
+            <p><strong>Фильтрующий метод:</strong> {{ fs_filter }}</p>
+            <p><strong>Метод-обертка:</strong> {{ fs_wrapper }}</p>
+            <p><strong>Модель:</strong> {{ ml_model }}</p>
+        </div>
+        
+        <!-- Параметры методов -->
+        <div class="params-section">
+            <h3>Параметры методов</h3>
+            
+            <!-- Filter Method Parameters -->
+            <div class="filter-params">
+                <h4 class="params-title">Параметры фильтрующего метода ({{ fs_filter }})</h4>
+                {% if fs_filter_params_desc %}
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th width="30%">Параметр</th>
+                                <th width="20%">Значение</th>
+                                <th width="50%">Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for param in fs_filter_params_desc %}
+                                <tr>
+                                    <td><strong>{{ param.0 }}</strong></td>
+                                    <td>{{ param.1 }}</td>
+                                    <td>{{ param.2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted">Используются параметры по умолчанию</p>
+                {% endif %}
+            </div>
+            
+            <!-- Wrapper Method Parameters -->
+            <div class="wrapper-params">
+                <h4 class="params-title">Параметры метода-обертки ({{ fs_wrapper }})</h4>
+                {% if fs_wrapper_params_desc %}
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th width="30%">Параметр</th>
+                                <th width="20%">Значение</th>
+                                <th width="50%">Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for param in fs_wrapper_params_desc %}
+                                <tr>
+                                    <td><strong>{{ param.0 }}</strong></td>
+                                    <td>{{ param.1 }}</td>
+                                    <td>{{ param.2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted">Используются параметры по умолчанию</p>
+                {% endif %}
+            </div>
+            
+            <!-- Model Method Parameters -->
+            <div class="model-params">
+                <h4 class="params-title">Параметры модели ({{ ml_model }})</h4>
+                {% if ml_model_params_desc %}
+                    <table class="params-table">
+                        <thead>
+                            <tr>
+                                <th width="30%">Параметр</th>
+                                <th width="20%">Значение</th>
+                                <th width="50%">Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for param in ml_model_params_desc %}
+                                <tr>
+                                    <td><strong>{{ param.0 }}</strong></td>
+                                    <td>{{ param.1 }}</td>
+                                    <td>{{ param.2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="text-muted">Используются параметры по умолчанию</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Метрики модели</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Accuracy</div>
+                <div class="metric-value">{{ ml_model_metrics.accuracy|floatformat:2|default:"-" }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Precision</div>
+                <div class="metric-value">{{ ml_model_metrics.precision|floatformat:2|default:"-" }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Recall</div>
+                <div class="metric-value">{{ ml_model_metrics.recall|floatformat:2|default:"-" }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">F1-score</div>
+                <div class="metric-value">{{ ml_model_metrics.f1_score|floatformat:2|default:"-" }}</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">ROC-AUC</div>
+                <div class="metric-value">{{ ml_model_metrics.roc_auc|floatformat:2|default:"-" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Отобранные признаки</h2>
+        <div class="features-container">
+            <div class="features-section">
+                <h3>Исходный набор признаков</h3>
+                <p class="text-muted">{{ preliminarily_selected_features|length }} признаков изначально</p>
+                <ul class="features-list">
+                    {% for feature in preliminarily_selected_features %}
+                        <li class="feature-item">{{ feature }}</li>
+                    {% empty %}
+                        <li class="text-muted">Нет доступных начальных признаков</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="features-section">
+                <h3>Окончательный набор признаков</h3>
+                <p class="text-muted">{{ final_selected_features|length }} признаков в результате работы пайплайна</p>
+                <ul class="features-list">
+                    {% for feature in final_selected_features %}
+                        <li class="feature-item">{{ feature }}</li>
+                    {% empty %}
+                        <li class="text-muted">Нет доступных выбранных признаков</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>SHAP Анализ</h2>
+        <h3>Столбачая диаграмма важности признаков</h3>
+        <div class="plot-container">
+            {% if shap_plot_global %}
+                <img src="data:image/png;base64,{{ shap_plot_global }}" alt="Глобальный SHAP График">
+            {% else %}
+                <div class="plot-placeholder">Здесь будет отображен глобальный SHAP график</div>
+            {% endif %}
+        </div>
+        
+        <h3>Точечная диаграмма распределения SHAP-значений</h3> 
+        <div class="plot-container">
+            {% if shap_plot_distribution %}
+                <img src="data:image/png;base64,{{ shap_plot_distribution }}" alt="График Распределения SHAP">
+            {% else %}
+                <div class="plot-placeholder">Здесь будет отображен график распределения SHAP</div>
+            {% endif %} 
+        </div>
+    </div>
+
+    <div class="button-group">
+        <a href="{% url 'featurama:configure_pipeline' pipeline.id %}" class="button button-primary">
+            Назад к настройке пайплайна
+        </a>
+        <a href="{% url 'featurama:manual_feature_selection' pipeline.id %}" class="button button-secondary">
+            Назад к обучению модели
+        </a>
+        <a href="{% url 'featurama:export_report' pipeline.id %}" class="button button-primary">
+            Экспорт PDF отчета
+        </a>
+    </div>
+{% endblock %}
