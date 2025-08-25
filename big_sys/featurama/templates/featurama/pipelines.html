@@ -158,8 +158,8 @@
                         </div>
                     </div>
                     <div class="pipeline-actions">
-                        {% if pipeline.dataset %}
-                            {% if pipeline.filter_method %}
+                        {% if pipeline.data_content %}
+                            {% if pipeline.ml_model %}
                                 <a href="{% url 'featurama:results_summary' pipeline.id %}" class="button button-primary">
                                     Просмотреть отчет
                                 </a>
