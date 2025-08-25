@@ -299,7 +299,7 @@
     <h2>Обучение модели</h2>
     <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
     <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
-    <p><strong>Количество анализируемых признаков:</strong> {{ preliminarily_selected_features|length }}</p>
+    <p><strong>Количество анализируемых признаков:</strong> {{ user_features|length }}</p>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -329,8 +329,8 @@
                         <h4>Отобранные признаки</h4>
                         <p>Количество признаков на каждом этапе:</p>
                         <p><strong>Исходный набор признаков:</strong> {{ user_features|length }}</p>
-                        <p><strong>Фильтрующий метод ({{ pipeline.filter_method }}):</strong> {{ filtered_features|length }}</p>
-                        <p><strong>Метод-обертка ({{ pipeline.wrapper_method }}):</strong> {{ wrapped_features|length }}</p>
+                        <p><strong>Фильтрующий метод ({{ pipeline.fs_filter.name }}):</strong> {{ filtered_features|length }}</p>
+                        <p><strong>Метод-обертка ({{ pipeline.fs_wrapper.name }}):</strong> {{ wrapped_features|length }}</p>
                         
                         <div class="search-container">
                             <input type="text" id="feature-search" placeholder="Поиск признаков..." class="search-input">
