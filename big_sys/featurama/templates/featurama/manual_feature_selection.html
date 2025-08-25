@@ -290,6 +290,10 @@
         border-radius: 4px;
         background-color: white;
     }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 {% endblock %}
 
 {% block content %}
@@ -301,7 +305,7 @@
     <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
     <p><strong>Количество анализируемых признаков:</strong> {{ user_features|length }}</p>
 
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="pipeline-form">
             {% csrf_token %}
             <!-- Модель машинного обучения -->
             <div class="method-section">
@@ -369,12 +373,20 @@
             </div>
 
             <div class="button-group">
-                <button type="submit" class="button button-primary">Обучить модель</button>
+                <button type="submit" class="button button-primary"  id="submit-button">Обучить модель</button>
                 <a href="{% url 'featurama:configure_pipeline' pipeline.id %}" class="button button-outline">
                     Назад
                 </a>
             </div>
         </form>
+
+        <!-- Индикатор загрузки -->
+        <div id="loading-indicator" style="display: none; margin-top: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="loader" style="width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin: 0;">Загрузка... Выполняются расчеты</p>
+            </div>
+        </div>
 {% endblock %}
 
 {% block scripts %}
@@ -444,6 +456,23 @@
             if (select && select.selectedIndex >= 0) {
                 updateParameters(select, type);
             }
+        });
+
+        // Обработчик отправки формы
+        const form = document.getElementById('pipeline-form');
+        const submitButton = document.getElementById('submit-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        form.addEventListener('submit', function() {
+            // Показываем индикатор загрузки
+            loadingIndicator.style.display = 'block';
+            
+            // Отключаем кнопку, чтобы предотвратить повторное нажатие
+            submitButton.disabled = true;
+            submitButton.textContent = 'Обработка...';
+            
+            // Форма будет отправлена, и после завершения расчетов
+            // пользователь будет перенаправлен автоматически
         });
     });
 
