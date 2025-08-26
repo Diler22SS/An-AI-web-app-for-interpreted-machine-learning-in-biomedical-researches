@@ -77,7 +77,7 @@ class BaseMachineLearning(ABC):
             fontsize=12
         )
         plt.tick_params(axis='y', labelsize=10)
-        plt.title("Важность признаков", fontsize=14)
+        plt.title("Информативность признаков", fontsize=14)
         plt.tight_layout()
         buf = io.BytesIO()
         plt.savefig(buf, format='png')

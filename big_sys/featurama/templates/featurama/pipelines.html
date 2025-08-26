@@ -2,7 +2,7 @@
 
 {% block title %}Главное меню{% endblock %}
 
-{% block header %}Главное меню{% endblock %}
+{% block header %}Главное меню пайплайнов поиска информативных гормонально-метаболических признаков миомы матки{% endblock %}
 
 {% block nav_pipelines %}active{% endblock %}
 
@@ -149,11 +149,11 @@
                     <div class="pipeline-body">
                         <div class="pipeline-info">
                             <p>Набор данных: {{ pipeline.filename|default:"Не задан" }}</p>
-                            <p>Целевая переменная: {{ pipeline.target_variable|default:"Не задан" }}</p>
-                            <p>Исходной набор признаков: {{ pipeline.preliminarily_selected_features|default:"Не задан" }}</p>
+                            <p>Целевая переменная, обозначающая миому матки: {{ pipeline.target_variable|default:"Не задан" }}</p>
+                            <p>Количество признаков в исходном наборе: {{ pipeline.preliminarily_selected_features|length|default:"Не задан" }}</p>
                             <p>Фильтрующий метод: {{ pipeline.fs_filter.name|default:"Не задан" }}</p>
                             <p>Метод-обертка: {{ pipeline.fs_wrapper.name|default:"Не задан" }}</p>
-                            <p>Окончательный набор признаков: {{ pipeline.final_selected_features|default:"Не задан" }}</p>
+                            <p>Количество признаков в окончательном наборе: {{ pipeline.final_selected_features|length|default:"Не задан" }}</p>
                             <p>Модель: {{ pipeline.ml_model.name|default:"Не задан" }}</p>
                         </div>
                     </div>
@@ -183,7 +183,7 @@
         </div>
     {% else %}
         <div class="empty-state">
-            У вас пока нет пайплайнов. Создайте один, чтобы начать!
+            У вас пока нет пайплайнов поиска информативных гормонально-метаболических признаков миомы матки. Создайте один, чтобы начать!
         </div>
     {% endif %}
     

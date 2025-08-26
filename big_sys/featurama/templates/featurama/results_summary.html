@@ -180,13 +180,13 @@
 
 {% block content %}
     <div class="section">
-        <h2>Информация о пайплайне</h2>
+        <h2>Информация о пайплайне поиска информативных гормонально-метаболических признаков миомы матки</h2>
         <div class="pipeline-info">
             <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
-            <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
+            <p><strong>Целевая переменная, обозначающая миому матки:</strong> {{ target_variable }}</p>
             <p><strong>Фильтрующий метод:</strong> {{ fs_filter }}</p>
             <p><strong>Метод-обертка:</strong> {{ fs_wrapper }}</p>
-            <p><strong>Модель:</strong> {{ ml_model }}</p>
+            <p><strong>Модель машинного обучения:</strong> {{ ml_model }}</p>
         </div>
         
         <!-- Параметры методов -->
@@ -249,7 +249,7 @@
             
             <!-- Model Method Parameters -->
             <div class="model-params">
-                <h4 class="params-title">Параметры модели ({{ ml_model }})</h4>
+                <h4 class="params-title">Параметры модели машинного обучения ({{ ml_model }})</h4>
                 {% if ml_model_params_desc %}
                     <table class="params-table">
                         <thead>
@@ -277,7 +277,7 @@
     </div>
 
     <div class="section">
-        <h2>Метрики модели</h2>
+        <h2>Метрики обученной модели машинного обучения</h2>
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">Accuracy</div>
@@ -303,10 +303,10 @@
     </div>
 
     <div class="section">
-        <h2>Отобранные признаки</h2>
+        <h2>Отобранные гормонально-метаболические признаки</h2>
         <div class="features-container">
             <div class="features-section">
-                <h3>Исходный набор признаков</h3>
+                <h3>Исходный набор гормонально-метаболических признаков</h3>
                 <p class="text-muted">{{ preliminarily_selected_features|length }} признаков изначально</p>
                 <ul class="features-list">
                     {% for feature in preliminarily_selected_features %}
@@ -318,7 +318,7 @@
             </div>
             
             <div class="features-section">
-                <h3>Окончательный набор признаков</h3>
+                <h3>Окончательный набор гормонально-метаболических признаков</h3>
                 <p class="text-muted">{{ final_selected_features|length }} признаков в результате работы пайплайна</p>
                 <ul class="features-list">
                     {% for feature in final_selected_features %}
@@ -333,7 +333,7 @@
 
     <div class="section">
         <h2>SHAP Анализ</h2>
-        <h3>Столбачая диаграмма важности признаков</h3>
+        <h3>Столбачая диаграмма информативности гормонально-метаболических признаков</h3>
         <div class="plot-container">
             {% if shap_plot_global %}
                 <img src="data:image/png;base64,{{ shap_plot_global }}" alt="Глобальный SHAP График">

@@ -365,10 +365,10 @@
     <form method="post" enctype="multipart/form-data" id="dataUploadForm">
         {% csrf_token %}
         <div class="section">
-            <h2>Выбор целевой переменной</h2>
+            <h2>Выбор названия целевой переменной</h2>
             <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
 
-            <p class="description">Выберите бинарную целевую переменную</p>
+            <p class="description">Выберите название целевой переменной, обозначающая миому матки. Целевая переменная должна быть бинарной и сбалансированной.</p>
             <div class="form-group">
                 {{ form.target_variable.label_tag }}
                 {{ form.target_variable }}

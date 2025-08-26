@@ -246,8 +246,8 @@
 
     <h2>Настройка пайплайна</h2>
     <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
-    <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
-    <p><strong>Количество анализируемых признаков:</strong> {{ preliminarily_selected_features|length }}</p>
+    <p><strong>Целевая переменная, обозначающая миому матки:</strong> {{ target_variable }}</p>
+    <p><strong>Количество анализируемых гормонально-метаболических признаков:</strong> {{ preliminarily_selected_features|length }}</p>
 
     <form method="post" enctype="multipart/form-data" id="pipeline-form">
         {% csrf_token %}
@@ -255,7 +255,7 @@
         <!-- Фильтрующий метод -->
         <div class="method-section">
             <h3>Выбор фильтрующего метода</h3>
-            <p class="description">Фильтрующие методы выбирают признаки на основе их статистических свойств</p>
+            <p class="description">Фильтрующие методы выбирают гормонально-метаболические признаки на основе их статистических свойств</p>
             <select name="filter_method" id="filter-method-select" required onchange="updateParameters(this, 'filter')">
                 {% for filter in filters %}
                     <option value="{{ filter.function_name }}"
@@ -271,7 +271,7 @@
         <!-- Метод-обертка -->
         <div class="method-section">
             <h3>Выбор метода-обертки</h3>
-            <p class="description">Методы-обертки используют модель машинного обучения для оценки подмножеств признаков</p>
+            <p class="description">Методы-обертки используют модель машинного обучения для оценки подмножеств гормонально-метаболических признаков</p>
             <select name="wrapper_method" id="wrapper-method-select" required onchange="updateParameters(this, 'wrapper')">
                 {% for wrapper in wrappers %}
                     <option value="{{ wrapper.function_name }}"

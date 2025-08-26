@@ -302,15 +302,15 @@
     </div>
     <h2>Обучение модели</h2>
     <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
-    <p><strong>Целевая переменная:</strong> {{ target_variable }}</p>
-    <p><strong>Количество анализируемых признаков:</strong> {{ user_features|length }}</p>
+    <p><strong>Целевая переменная, обозначающая миому матки:</strong> {{ target_variable }}</p>
+    <p><strong>Количество анализируемых гормонально-метаболических признаков:</strong> {{ user_features|length }}</p>
 
         <form method="post" enctype="multipart/form-data" id="pipeline-form">
             {% csrf_token %}
             <!-- Модель машинного обучения -->
             <div class="method-section">
                 <h3>Выбор модели машинного обучения</h3>
-                <p class="description">Модель машинного обучения</p>
+                <p class="description">Модель машинного обучения, которая будет использована для интерпретации информативности гормонально-метаболических признаков</p>
                 <select name="model_method" id="model-method-select" required onchange="updateParameters(this, 'model')">
                     {% for model in models %}
                         <option value="{{ model.function_name }}"
@@ -325,16 +325,16 @@
             <div class="section">
                 <h3>Выбор признаков</h3>
                 <p class="text-muted">
-                    Просмотрите и скорректируйте признаки, выбранные фильтрующим методом и методом-обертки.
-                    Выберите, какие признаки вы хотите включить в обучение модели.
+                    Просмотрите гормонально-метаболические признаки, отобранные фильтрующим методом и методом-обертки.
+                    Выберите, какие гормонально-метаболические признаки вы хотите включить в обучение модели.
                 </p>
                 <div class="feature-selection-container">
                     <div class="features-section">
-                        <h4>Отобранные признаки</h4>
+                        <h3>Отобранные признаки</h3>
                         <p>Количество признаков на каждом этапе:</p>
-                        <p><strong>Исходный набор признаков:</strong> {{ user_features|length }}</p>
-                        <p><strong>Фильтрующий метод ({{ pipeline.fs_filter.name }}):</strong> {{ filtered_features|length }}</p>
-                        <p><strong>Метод-обертка ({{ pipeline.fs_wrapper.name }}):</strong> {{ wrapped_features|length }}</p>
+                        <p><strong>- Исходный набор признаков:</strong> {{ user_features|length }}</p>
+                        <p><strong>- Фильтрующий метод ({{ pipeline.fs_filter.name }}):</strong> {{ filtered_features|length }}</p>
+                        <p><strong>- Метод-обертка ({{ pipeline.fs_wrapper.name }}):</strong> {{ wrapped_features|length }}</p>
                         
                         <div class="search-container">
                             <input type="text" id="feature-search" placeholder="Поиск признаков..." class="search-input">
