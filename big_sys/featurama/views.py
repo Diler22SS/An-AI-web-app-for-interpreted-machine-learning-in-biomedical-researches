@@ -333,7 +333,7 @@ def _get_param_description(parameters, method_instance):
     adjustable_params = getattr(method_instance, 'adjustable_parameters', {})
     result = []
     for key, value in dict(parameters).items():
-        description = adjustable_params.get(key, {}).get('description', 'Нет описания')
+        description = adjustable_params.get(key, {}).get('title', 'Нет описания')
         result.append([key, value, description])
     return result
 

@@ -1,8 +1,8 @@
 {% extends "featurama/base.html" %}
 
-{% block title %}Пайплайн №{{ pipeline.id }}{% endblock %}
+{% block title %}Настройка алгоритма {% endblock %}
 
-{% block header %}Пайплайн №{{ pipeline.id }}{% endblock %}
+{% block header %}Настройка алгоритма {% endblock %}
 
 {% block nav_pipelines %}active{% endblock %}
 
@@ -367,7 +367,7 @@
         <div class="section">
             <h2>Предварительный выбор признаков</h2>
             <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
-            <p><strong>Целевая переменная, обозначающая миому матки:</strong> {{ target_variable }}</p>
+            <p><strong>Целевая переменная, обозначающая наличие диагноза ММ:</strong> {{ target_variable }}</p>
             <p class="description">
                 Выберите гормонально-метаболические признаки, которые вы хотите включить в анализ. 
                 Признаки, не выбранные здесь, будут игнорироваться при обработке.

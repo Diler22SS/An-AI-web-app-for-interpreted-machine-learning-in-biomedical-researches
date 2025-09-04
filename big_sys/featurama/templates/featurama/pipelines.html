@@ -2,14 +2,14 @@
 
 {% block title %}Главное меню{% endblock %}
 
-{% block header %}Главное меню пайплайнов поиска информативных гормонально-метаболических признаков миомы матки{% endblock %}
+{% block header %}Главное меню алгоритмов выявления информативных гормонально-метаболических маркеров миомы матки{% endblock %}
 
 {% block nav_pipelines %}active{% endblock %}
 
 {% block additional_styles %}
     .pipelines-container {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
         gap: calc(var(--spacing) * 2);
         margin-top: calc(var(--spacing) * 2);
     }
@@ -134,7 +134,7 @@
         <form method="post">
             {% csrf_token %}
             <button type="submit" class="button button-primary">
-                <span>Создать новый пайплайн</span>
+                <span>Создать новый алгоритм</span>
             </button>
         </form>
     </div>
@@ -144,15 +144,15 @@
             {% for pipeline in pipelines %}
                 <div class="pipeline-card">
                     <div class="pipeline-header">
-                        <h3>Пайплайн №{{ pipeline.id }}</h3>
+                        <h3>Алгоритм №{{ forloop.revcounter }}</h3>
                     </div>
                     <div class="pipeline-body">
                         <div class="pipeline-info">
                             <p>Набор данных: {{ pipeline.filename|default:"Не задан" }}</p>
-                            <p>Целевая переменная, обозначающая миому матки: {{ pipeline.target_variable|default:"Не задан" }}</p>
+                            <p>Целевая переменная, обозначающая наличие диагноза ММ: {{ pipeline.target_variable|default:"Не задан" }}</p>
                             <p>Количество признаков в исходном наборе: {{ pipeline.preliminarily_selected_features|length|default:"Не задан" }}</p>
                             <p>Фильтрующий метод: {{ pipeline.fs_filter.name|default:"Не задан" }}</p>
-                            <p>Метод-обертка: {{ pipeline.fs_wrapper.name|default:"Не задан" }}</p>
+                            <p>Метод обёртывания: {{ pipeline.fs_wrapper.name|default:"Не задан" }}</p>
                             <p>Количество признаков в окончательном наборе: {{ pipeline.final_selected_features|length|default:"Не задан" }}</p>
                             <p>Модель: {{ pipeline.ml_model.name|default:"Не задан" }}</p>
                         </div>
@@ -174,7 +174,7 @@
                             </a>
                         {% endif %}
                         <a href="{% url 'featurama:delete_pipeline' pipeline.id %}" class="button button-outline" 
-                           onclick="return confirm('Вы уверены, что хотите удалить этот пайплайн?')">
+                           onclick="return confirm('Вы уверены, что хотите удалить этот алгоритм?')">
                             Удалить
                         </a>
                     </div>
@@ -183,7 +183,7 @@
         </div>
     {% else %}
         <div class="empty-state">
-            У вас пока нет пайплайнов поиска информативных гормонально-метаболических признаков миомы матки. Создайте один, чтобы начать!
+            У вас пока нет алгоритмов поиска информативных гормонально-метаболических признаков миомы матки. Создайте один, чтобы начать!
         </div>
     {% endif %}
     

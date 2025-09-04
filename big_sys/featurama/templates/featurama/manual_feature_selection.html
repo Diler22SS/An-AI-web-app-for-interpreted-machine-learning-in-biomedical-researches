@@ -1,8 +1,8 @@
 {% extends "featurama/base.html" %}
 
-{% block title %}Пайплайн №{{ pipeline.id }}{% endblock %}
+{% block title %}Настройка алгоритма {% endblock %}
 
-{% block header %}Пайплайн №{{ pipeline.id }}{% endblock %}
+{% block header %}Настройка алгоритма {% endblock %}
 
 {% block nav_pipelines %}active{% endblock %}
 
@@ -294,6 +294,17 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    .info-icon {
+        cursor: help;
+        margin-left: 5px;
+        font-size: 0.9em;
+        opacity: 0.6;
+    }
+
+    .info-icon:hover {
+        opacity: 1;
+    }
 {% endblock %}
 
 {% block content %}
@@ -302,7 +313,7 @@
     </div>
     <h2>Обучение модели</h2>
     <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
-    <p><strong>Целевая переменная, обозначающая миому матки:</strong> {{ target_variable }}</p>
+    <p><strong>Целевая переменная, обозначающая наличие диагноза ММ:</strong> {{ target_variable }}</p>
     <p><strong>Количество анализируемых гормонально-метаболических признаков:</strong> {{ user_features|length }}</p>
 
         <form method="post" enctype="multipart/form-data" id="pipeline-form">
@@ -334,7 +345,7 @@
                         <p>Количество признаков на каждом этапе:</p>
                         <p><strong>- Исходный набор признаков:</strong> {{ user_features|length }}</p>
                         <p><strong>- Фильтрующий метод ({{ pipeline.fs_filter.name }}):</strong> {{ filtered_features|length }}</p>
-                        <p><strong>- Метод-обертка ({{ pipeline.fs_wrapper.name }}):</strong> {{ wrapped_features|length }}</p>
+                        <p><strong>- Метод обёртывания ({{ pipeline.fs_wrapper.name }}):</strong> {{ wrapped_features|length }}</p>
                         
                         <div class="search-container">
                             <input type="text" id="feature-search" placeholder="Поиск признаков..." class="search-input">
@@ -414,8 +425,19 @@
             paramGroup.className = 'param-group';
 
             const label = document.createElement('label');
-            label.textContent = config.description || paramName;
+            label.textContent = config.title || paramName;
             label.setAttribute('for', `${type}_${paramName}`);
+            // Добавляем подсказку, если описание существует
+            if (config.description) {
+                // Создаем элемент для иконки
+                const infoIcon = document.createElement('span');
+                infoIcon.textContent = 'ⓘ';
+                infoIcon.className = 'info-icon';
+                infoIcon.setAttribute('title', config.description);
+                
+                // Добавляем иконку после текста label
+                label.appendChild(infoIcon);
+            }
             paramGroup.appendChild(label);
 
             let input;
@@ -427,8 +449,9 @@
 
                 for (const category of config.categories) {
                     const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
+                    category_key = Object.keys(category)[0]
+                    option.value = category_key;
+                    option.textContent = category[category_key];
                     if (category === config.default) option.selected = true;
                     input.appendChild(option);
                 }

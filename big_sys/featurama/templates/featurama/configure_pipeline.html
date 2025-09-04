@@ -1,8 +1,8 @@
 {% extends "featurama/base.html" %}
 
-{% block title %}Пайплайн №{{ pipeline.id }}{% endblock %}
+{% block title %}Настройка алгоритма{% endblock %}
 
-{% block header %}Пайплайн №{{ pipeline.id }}{% endblock %}
+{% block header %}Настройка алгоритма{% endblock %}
 
 {% block nav_pipelines %}active{% endblock %}
 
@@ -236,6 +236,17 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+
+    .info-icon {
+        cursor: help;
+        margin-left: 5px;
+        font-size: 0.9em;
+        opacity: 0.6;
+    }
+
+    .info-icon:hover {
+        opacity: 1;
+    }
 {% endblock %}
 
 
@@ -244,9 +255,9 @@
         <p id="error-text">{% if error %}{{ error }}{% endif %}</p>
     </div>
 
-    <h2>Настройка пайплайна</h2>
+    <h2>Настройка методов отбора признаков</h2>
     <p><strong>Набор данных:</strong> {{ dataset_name }}</p>
-    <p><strong>Целевая переменная, обозначающая миому матки:</strong> {{ target_variable }}</p>
+    <p><strong>Целевая переменная, обозначающая наличие диагноза ММ:</strong> {{ target_variable }}</p>
     <p><strong>Количество анализируемых гормонально-метаболических признаков:</strong> {{ preliminarily_selected_features|length }}</p>
 
     <form method="post" enctype="multipart/form-data" id="pipeline-form">
@@ -270,7 +281,7 @@
 
         <!-- Метод-обертка -->
         <div class="method-section">
-            <h3>Выбор метода-обертки</h3>
+            <h3>Выбор метода обёртывания (метод с вложенной оценкой)</h3>
             <p class="description">Методы-обертки используют модель машинного обучения для оценки подмножеств гормонально-метаболических признаков</p>
             <select name="wrapper_method" id="wrapper-method-select" required onchange="updateParameters(this, 'wrapper')">
                 {% for wrapper in wrappers %}
@@ -325,8 +336,19 @@
             paramGroup.className = 'param-group';
 
             const label = document.createElement('label');
-            label.textContent = config.description || paramName;
+            label.textContent = config.title || paramName;
             label.setAttribute('for', `${type}_${paramName}`);
+            // Добавляем подсказку, если описание существует
+            if (config.description) {
+                // Создаем элемент для иконки
+                const infoIcon = document.createElement('span');
+                infoIcon.textContent = 'ⓘ';
+                infoIcon.className = 'info-icon';
+                infoIcon.setAttribute('title', config.description);
+                
+                // Добавляем иконку после текста label
+                label.appendChild(infoIcon);
+            }
             paramGroup.appendChild(label);
 
             let input;
@@ -338,8 +360,9 @@
 
                 for (const category of config.categories) {
                     const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
+                    category_key = Object.keys(category)[0]
+                    option.value = category_key;
+                    option.textContent = category[category_key];
                     if (category === config.default) option.selected = true;
                     input.appendChild(option);
                 }
